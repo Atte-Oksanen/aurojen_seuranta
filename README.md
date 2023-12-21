@@ -1,6 +1,6 @@
 # Road winter maintenance
 
-A simple POC of visualising snowplow data in Helsinki area. 
+A simple POC for visualising snowplow data in Helsinki area. 
 
 Data collected by [Stara](https://stara.hel.fi/). 
 

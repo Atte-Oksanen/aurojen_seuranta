@@ -15,6 +15,13 @@
   "dependencies": {
     "axios": "^1.6.2",
     "cors": "^2.8.5",
-    "express": "^4.18.2"
+    "epsg-index": "^2.0.0",
+    "express": "^4.18.2",
+    "fast-xml-parser": "^4.3.2",
+    "leaflet": "^1.9.4",
+    "proj4": "^2.9.2",
+    "xml-js": "^1.6.11",
+    "xml2js": "^0.6.2",
+    "xmldom": "^0.6.0"
   }
 }

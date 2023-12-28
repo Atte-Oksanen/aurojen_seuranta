@@ -8,5 +8,4 @@ app.use(cors())
 
 app.use('/api/snowplow', snowplowRouter)
 
-getRoutesXWeeksAgo(5)
 module.exports = app

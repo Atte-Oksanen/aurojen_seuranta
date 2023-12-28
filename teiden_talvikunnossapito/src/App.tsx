@@ -3,9 +3,7 @@ import MapComponent from './components/mapComponent'
 function App() {
 
   return (
-    <>
-      <MapComponent />
-    </>
+    <MapComponent />
   )
 }
 

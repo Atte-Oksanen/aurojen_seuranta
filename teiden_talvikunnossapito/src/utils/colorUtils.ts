@@ -1,15 +1,9 @@
-export const randomizeColor = () => {
-  const rgb = {
-    r: Math.floor(Math.random() * 245 + 10),
-    g: Math.floor(Math.random() * 245 + 10),
-    b: Math.floor(Math.random() * 245 + 10)
-  }
-  return `#${valueToHex(Math.round(rgb.r))}${valueToHex(Math.round(rgb.g))}${valueToHex(Math.round(rgb.b))}`
-}
 
 export const getColorFromTime = (time: number) => {
-  const degAmount = 1 - ((Date.now() - (time)) / 129600000)
-  const hsv = { h: (115 * degAmount) / 360, s: 1, v: 1 }
+  const degAmount = 1 - ((1703710800000 - time) / 129600000) //Sample time to match 28.12 dataset
+  // const degAmount = 1 - ((1703613600000 - time) / 129600000) //Sample time to match 26.12 dataset
+  // const degAmount = 1 - ((Date.now() - (time)) / 129600000) //Current time
+  const hsv = { h: 230 / 360, s: 1 * degAmount + 0.1, v: 1 }
   return hsvToHex(hsv)
 }
 
@@ -17,15 +11,22 @@ const valueToHex = (v: number) => {
   const hex = v.toString(16)
   return hex.length === 1 ? '0' + hex : hex
 }
-const hsvToHex = hsv => {
 
-  let r, g, b
 
-  let i = Math.floor(hsv.h * 6)
-  let f = hsv.h * 6 - i
-  let p = hsv.v * (1 - hsv.s)
-  let q = hsv.v * (1 - f * hsv.s)
-  let t = hsv.v * (1 - (1 - f) * hsv.s)
+const hsvToHex = (hsv: { h: number, s: number, v: number }) => {
+
+  let r = 0, g = 0, b = 0
+  if (hsv.s > 1) {
+    hsv.s = 1
+  }
+  if (hsv.v > 1) {
+    hsv.v = 1
+  }
+  const i = Math.floor(hsv.h * 6)
+  const f = hsv.h * 6 - i
+  const p = hsv.v * (1 - hsv.s)
+  const q = hsv.v * (1 - f * hsv.s)
+  const t = hsv.v * (1 - (1 - f) * hsv.s)
 
   switch (i % 6) {
     case 0:

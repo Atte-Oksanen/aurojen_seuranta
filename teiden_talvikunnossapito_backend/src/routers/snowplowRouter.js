@@ -2,11 +2,11 @@ const getData = require('../../dataFetch')
 const getRoutesXWeeksAgo = require('../services/snowplowRoute')
 
 const snowplowRouter = require('express').Router()
+const snowPlowData = getData()
+console.log('snow plow data loaded')
 
-
-snowplowRouter.get('/', async (req, res) => {
-  // res.json(await getRoutesXWeeksAgo(5))
-  res.json(await getData())
+snowplowRouter.get('/', (req, res) => {
+  res.json(snowPlowData)
 })
 
 module.exports = snowplowRouter

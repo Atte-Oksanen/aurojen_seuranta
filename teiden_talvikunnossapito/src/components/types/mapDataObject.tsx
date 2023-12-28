@@ -1,11 +1,8 @@
-interface LocationObject {
-  coords: number[]
-  events: string[]
-  timestamp: string
-}
+import { LatLngExpression } from "leaflet";
 
 export interface MapDataObject {
   id: string,
-  last_location: LocationObject,
-  location_history: LocationObject[]
+  coordinates: LatLngExpression[],
+  time: EpochTimeStamp,
+  workType: "auraus" | "liukkauden torjunta"[]
 }

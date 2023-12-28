@@ -1,22 +1,19 @@
-import { MapContainer, TileLayer, Polyline, GeoJSON } from "react-leaflet"
+import { MapContainer, TileLayer, Polyline } from "react-leaflet"
 import 'leaflet/dist/leaflet.css'
 import { useEffect, useRef, useState } from "react"
 import plowService from '../services/plowActivity'
-import { getColorFromTime, randomizeColor } from "../utils/randomizeColor"
+import { getColorFromTime } from "../utils/colorUtils"
 import { MapDataObject } from "./types/mapDataObject"
 
 const MapComponent = () => {
   const mapRef = useRef(null)
-  const lat = 60.193084
-  const lon = 24.940338
-  const [coords, setCoords] = useState()
+  const lat = 60.20308
+  const lon = 24.73824
+  const [coords, setCoords] = useState<MapDataObject[]>()
 
   useEffect(() => {
     const primeData = async () => {
-      console.log('start priming')
-      const mapData: MapDataObject[] = await plowService.getPlowData()
-      setCoords(mapData)
-      console.log('set')
+      setCoords(await plowService.getPlowData())
     }
     primeData()
   }, [])

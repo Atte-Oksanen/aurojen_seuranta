@@ -7,8 +7,8 @@ import { MapDataObject } from "./types/mapDataObject"
 
 const MapComponent = () => {
   const mapRef = useRef(null)
-  const lat = 60.20308
-  const lon = 24.73824
+  const lat = 60.15976
+  const lon = 24.72423
   const [coords, setCoords] = useState<MapDataObject[]>()
 
   useEffect(() => {
@@ -19,9 +19,9 @@ const MapComponent = () => {
   }, [])
   return (
     <div>
-      <MapContainer center={[lat, lon]} zoom={12} ref={mapRef} style={{ height: '100vh', width: '100vw' }}>
+      <MapContainer center={[lat, lon]} zoom={12.5} ref={mapRef} style={{ height: '100vh', width: '100vw' }}>
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          url="https://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png" />
         {coords && coords.map(coordElement => <Polyline key={coordElement.id} positions={coordElement.coordinates} color={getColorFromTime(coordElement.time)} />)}
       </MapContainer>
     </div>

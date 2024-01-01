@@ -5,7 +5,8 @@ const snowplowRouter = require('express').Router()
 console.log('data load started')
 const startTime = Date.now()
 const snowPlowData = getData()
-console.log('snow plow data loaded', (Date.now() - startTime) / 1000, snowPlowData.length, snowPlowData[0].coordinates.length)
+console.log('snow plow data loaded in', (Date.now() - startTime) / 1000, snowPlowData.length)
+console.log('plow routes', snowPlowData.length)
 
 snowplowRouter.get('/', (req, res) => {
   res.json(snowPlowData)

@@ -6,7 +6,4 @@ API provided by The city of Espoo, [API reference](https://kartat.espoo.fi/avoin
 
 Inspired by [auratkartalla.com](https://auratkartalla.com/) from [Sampsa Kuronen](https://github.com/sampsakuronen)
 
-![image](https://github.com/Atte-Oksanen/teiden_talvikunnossapito/assets/97843376/4ac69514-751a-4b18-868a-26b71ab1f7c0)
-
-
-
+![image](https://github.com/Atte-Oksanen/teiden_talvikunnossapito/assets/97843376/f5163f29-3278-451b-a56c-a7043ba94963)

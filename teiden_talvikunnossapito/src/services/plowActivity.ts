@@ -1,9 +1,9 @@
 import axios from "axios"
-import { MapDataObject } from "../components/types/mapDataObject"
+import { GeoJsonObject } from "geojson"
 
 const API_URL = 'http://localhost:3001/api/snowplow'
 
-const getPlowData = async (): Promise<MapDataObject[]> => {
+const getPlowData = async (): Promise<GeoJsonObject> => {
   return (await axios.get(API_URL)).data
 }
 

@@ -134,39 +134,29 @@ const getData = () => {
   const tranformedData = unitedData.map(element => { return { ...element, coordinates: element.coordinates.map(element => element.split(',').map(element => Number(element)).reverse()) } })
 
 
-  const getPerpendicularDistance = (lineA, lineB, point) => {
-    const A = point[0] - lineA[0]
-    const B = point[1] - lineA[1]
-    const C = lineB[0] - lineA[0]
-    const D = lineB[1] - lineA[1]
-    const lenSqr = C * C + D * D
-    let param = -1
-    if (lenSqr != 0)
-      param = A * C + B * D / lenSqr
-    let xx, yy
-    if (param < 0) {
-      xx = lineA[0]
-      yy = lineA[1]
+  const getPerpendicularDistance = (point, line) => {
+    const pointX = point[0]
+    const pointY = point[1]
+    const lineStart = {
+      x: line[0][0],
+      y: line[0][1]
     }
-    else if (param > 1) {
-      xx = lineB[0]
-      yy = lineB[1]
+    const lineEnd = {
+      x: line[1][0],
+      y: line[1][1]
     }
-    else {
-      xx = lineA[0] + param * C
-      yy = lineA[1] + param * D
-    }
-    const dx = point[0] - xx
-    const dy = point[1] - yy
-    return Math.sqrt(dx * dx + dy * dy)
+    const slope = (lineEnd.y - lineStart.y) / (lineEnd.x - lineStart.x)
+    const intercept = lineStart.y - (slope * lineStart.x)
+    const result = Math.abs(slope * pointX - pointY + intercept) / Math.sqrt(Math.pow(slope, 2) + 1);
+    return result;
   }
 
   const douglasPeuckerOptimiser = (route, epsilon) => {
     let maxDistance = 0
     let index = 0
     const end = route.length - 1
-    for (let i = 2; i < end; i++) {
-      const distance = getPerpendicularDistance(route[0], route[end], route[i])
+    for (let i = 1; i < end; i++) {
+      const distance = getPerpendicularDistance(route[i], [route[0], route[end]])
       if (distance > maxDistance) {
         index = i
         maxDistance = distance
@@ -183,7 +173,7 @@ const getData = () => {
     return resultList
   }
   const optimizeTime = Date.now()
-  const optimizedData = tranformedData.map(element => { return { ...element, coordinates: douglasPeuckerOptimiser(element.coordinates, 200) } })
+  const optimizedData = tranformedData.map(element => { return { ...element, coordinates: douglasPeuckerOptimiser(element.coordinates, 1 / 100000) } })
   console.log('optimized data in ', (Date.now() - optimizeTime) / 1000, 'seconds')
 
   const unOptimizedDataLen = tranformedData.reduce((partialSum, element) => partialSum + element.coordinates.length, 0)
@@ -191,10 +181,25 @@ const getData = () => {
   console.log('unoptimized gps trace waypoints', unOptimizedDataLen)
   console.log('optimized gps trace waypoints', optimizedDataLen)
   console.log('difference to unoptimized', Math.round((1 - optimizedDataLen / unOptimizedDataLen) * 100), '%')
-  const returnData = optimizedData.map(element => { return { ...element, coordinates: element.coordinates.map(element => proj4(epsg3879.proj4, epsg4326.proj4, element.reverse()).reverse()) } })
+  const returnData = optimizedData.map(element => { return { ...element, coordinates: element.coordinates.map(element => proj4(epsg3879.proj4, epsg4326.proj4, element.reverse())) } })
   console.log('projection changed in', (Date.now() - projectionChangeTime) / 1000, 'seconds')
-
-  return returnData
+  const geoJson = {
+    type: 'FeatureCollection',
+    features:
+      returnData.map(element => {
+        return {
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: element.coordinates
+          },
+          properties: {
+            time: element.time
+          }
+        }
+      })
+  }
+  return geoJson
 }
 
 module.exports = getData

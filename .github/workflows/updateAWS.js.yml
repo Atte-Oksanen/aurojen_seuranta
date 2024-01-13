@@ -12,14 +12,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./teiden_talvikunnossapito_CRON
     strategy:
       matrix:
-        node-version: [14.x, 16.x, 18.x]
+        node-version: [18.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
     steps:
     - uses: actions/checkout@v3
-      with:
-        path: ./teiden_talvikunnossapito_CRON
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:

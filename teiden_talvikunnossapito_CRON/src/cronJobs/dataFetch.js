@@ -1,12 +1,11 @@
-const fs = require('fs')
 const { XMLParser } = require('fast-xml-parser')
 const epsg3879 = require('epsg-index/s/3879.json')
 const epsg4326 = require('epsg-index/s/4326.json')
 const proj4 = require('proj4')
 
-const getData = () => {
+const parseData = (data) => {
   const parseTime = Date.now()
-  const xmlData = fs.readFileSync('./testData/testData_30.12.23.xml').toString()
+  const xmlData = data
   const json = new XMLParser().parse(xmlData)
   const strippedData = []
   const testLimit = json['wfs:FeatureCollection']['gml:featureMember'].length
@@ -184,22 +183,25 @@ const getData = () => {
   const returnData = optimizedData.map(element => { return { ...element, coordinates: element.coordinates.map(element => proj4(epsg3879.proj4, epsg4326.proj4, element.reverse())) } })
   console.log('projection changed in', (Date.now() - projectionChangeTime) / 1000, 'seconds')
   const geoJson = {
-    type: 'FeatureCollection',
-    features:
-      returnData.map(element => {
-        return {
-          type: 'Feature',
-          geometry: {
-            type: 'LineString',
-            coordinates: element.coordinates
-          },
-          properties: {
-            time: element.time
+    timestamp: Date.now(),
+    geoJson: {
+      type: 'FeatureCollection',
+      features:
+        returnData.map(element => {
+          return {
+            type: 'Feature',
+            geometry: {
+              type: 'LineString',
+              coordinates: element.coordinates
+            },
+            properties: {
+              time: element.time
+            }
           }
-        }
-      })
+        })
+    }
   }
   return geoJson
 }
 
-module.exports = getData
+module.exports = parseData

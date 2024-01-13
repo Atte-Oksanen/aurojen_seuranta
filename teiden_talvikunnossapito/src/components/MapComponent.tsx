@@ -10,16 +10,20 @@ const MapComponent = () => {
   const lat = 60.15976
   const lon = 24.72423
   const [coords, setCoords] = useState<GeoJsonObject>()
+  const [timestamp, setTimestamp] = useState()
 
   useEffect(() => {
     const primeData = async () => {
-      setCoords(await plowService.getPlowData())
+      const plowData = await plowService.getPlowData() 
+      setCoords(plowData.geoJson)
+      setTimestamp(plowData.timestamp)
     }
     primeData()
   }, [])
   console.log(coords)
   return (
     <div>
+      <h2>{new Date(timestamp).toString()}</h2>
       <MapContainer center={[lat, lon]} zoom={12.5} ref={mapRef} style={{ height: '100vh', width: '100vw' }}>
         <TileLayer
           url="https://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png" />

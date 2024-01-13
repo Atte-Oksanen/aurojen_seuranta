@@ -1,12 +1,15 @@
-const getData = require('../../dataFetch')
-const getRoutesXWeeksAgo = require('../services/snowplowRoute')
-
+const getDataFromAWS = require('../services/getDataFromAWS')
 const snowplowRouter = require('express').Router()
 console.log('data load started')
 const startTime = Date.now()
-const snowPlowData = getData()
-console.log('snow plow data loaded in', (Date.now() - startTime) / 1000, snowPlowData.features.length)
-console.log('plow routes', snowPlowData.features.length)
+let snowPlowData = null
+
+const primeData = async () => {
+  snowPlowData = await getDataFromAWS()
+}
+
+primeData()
+
 
 snowplowRouter.get('/', (req, res) => {
   res.json(snowPlowData)

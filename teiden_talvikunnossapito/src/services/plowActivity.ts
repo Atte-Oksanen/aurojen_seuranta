@@ -14,7 +14,6 @@ if (process.env.NODE_ENV === 'development') {
   API_URL = 'https://auraseuranta-backend.onrender.com/api/snowplow'
 }
 
-console.log(API_URL)
 const getPlowData = async (): Promise<returnObject> => {
   return (await axios.get(API_URL)).data
 }

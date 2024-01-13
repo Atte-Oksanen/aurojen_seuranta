@@ -3,7 +3,7 @@ const epsg3879 = require('epsg-index/s/3879.json')
 const epsg4326 = require('epsg-index/s/4326.json')
 const proj4 = require('proj4')
 
-const parseData = (data) => {
+const parseData = (data, verbose) => {
   const parseTime = Date.now()
   const xmlData = data
   const json = new XMLParser().parse(xmlData)
@@ -13,20 +13,23 @@ const parseData = (data) => {
   for (let i = 0; i < testLimit; i++) { //Parse data
     const element = json['wfs:FeatureCollection']['gml:featureMember'][i]
     const coords = element['GIS:AuratKartalla']['GIS:Geometry']['gml:LineString']['gml:coordinates'].split(' ')
-    if (coords.length < 4) {
-      removedDataPoints++
-      continue
-    }
+    // if (coords.length < 4) {
+    //   removedDataPoints++
+    //   continue
+    // }
     strippedData.push({
       id: i,
       workType: element['GIS:AuratKartalla']['GIS:tyolajit'].split(', ').map(element => element.replace(/,/g, '')),
       time: new Date(element['GIS:AuratKartalla']['GIS:time']).getTime(),
-      coordinates: coords
+      coordinates: coords,
+      roadName: element['GIS:AuratKartalla']['GIS:Kadunnimi']
     })
   }
-  console.log('data transformed and stripped in', (Date.now() - parseTime) / 1000, 'seconds')
-  console.log('number of datapoints', strippedData.length)
-  console.log('number of datapoints removed', removedDataPoints, removedDataPoints / strippedData.length)
+  if (verbose) {
+    console.log('data transformed and stripped in', (Date.now() - parseTime) / 1000, 'seconds')
+    console.log('number of datapoints', strippedData.length)
+    console.log('number of datapoints removed', removedDataPoints, removedDataPoints / strippedData.length)
+  }
 
   const hashBuildTime = Date.now()
   let maxChain = 0
@@ -40,9 +43,11 @@ const parseData = (data) => {
       maxChain = Math.max(tempArray.length, maxChain)
     }
   })
-  console.log('stripped hash array length', strippedHashArray.size)
-  console.log('stripped hash table max chain', maxChain)
-  console.log('stripped hash table built in ', (Date.now() - hashBuildTime) / 1000, 'seconds')
+  if (verbose) {
+    console.log('stripped hash array length', strippedHashArray.size)
+    console.log('stripped hash table max chain', maxChain)
+    console.log('stripped hash table built in ', (Date.now() - hashBuildTime) / 1000, 'seconds')
+  }
 
   const duplicateFoundTime = Date.now()
   const duplicateIndecies = new Set()
@@ -54,8 +59,10 @@ const parseData = (data) => {
       }
     }
   }
-  console.log('amount of duplicates', duplicateIndecies.size, duplicateIndecies.size / (strippedData.length))
-  console.log('duplicates found in', (Date.now() - duplicateFoundTime) / 1000, 'seconds')
+  if (verbose) {
+    console.log('amount of duplicates', duplicateIndecies.size, duplicateIndecies.size / (strippedData.length))
+    console.log('duplicates found in', (Date.now() - duplicateFoundTime) / 1000, 'seconds')
+  }
 
   const duplicateRemoveTime = Date.now()
   const parsedData = []
@@ -65,7 +72,9 @@ const parseData = (data) => {
     }
     parsedData.push(strippedData[i])
   }
-  console.log('Data cleaned in', (Date.now() - duplicateRemoveTime) / 1000, 'seconds')
+  if (verbose) {
+    console.log('Data cleaned in', (Date.now() - duplicateRemoveTime) / 1000, 'seconds')
+  }
   const parsedHashArrayTime = Date.now()
   maxChain = 0
   const parsedHashArray = new Map()
@@ -79,9 +88,11 @@ const parseData = (data) => {
       maxChain = Math.max(tempArray.length, maxChain)
     }
   })
-  console.log('parsed hash array length', parsedHashArray.size)
-  console.log('parsed hash table max chain', maxChain)
-  console.log('parsed hash table built in ', (Date.now() - parsedHashArrayTime) / 1000, 'seconds')
+  if (verbose) {
+    console.log('parsed hash array length', parsedHashArray.size)
+    console.log('parsed hash table max chain', maxChain)
+    console.log('parsed hash table built in ', (Date.now() - parsedHashArrayTime) / 1000, 'seconds')
+  }
 
   const similaritiesTime = Date.now()
   const foundSimilarities = []
@@ -96,21 +107,23 @@ const parseData = (data) => {
       }
     }
   }
-  console.log('Split routes found in', (Date.now() - similaritiesTime) / 1000, 'seconds')
-  console.log('split routes found', foundSimilarities.length)
-
+  if (verbose) {
+    console.log('Split routes found in', (Date.now() - similaritiesTime) / 1000, 'seconds')
+    console.log('split routes found', foundSimilarities.length)
+  }
+  const parsedDataNodes = parsedData.reduce((prevSum, value) => prevSum + value.coordinates.length, 0)
   const splitUniteTime = Date.now()
   const unitedData = []
   let maxConnectChain = 0
   for (let i = 0; i < parsedData.length; i++) {
     let tempElement = parsedData[i]
     const lookUpElement = foundSimilarities.find(element => element[0] === parsedData[i].id || element[1] === parsedData[i].id)
-
     if (lookUpElement) {
+      maxConnectChain++
       if (lookUpElement[0] === tempElement.id) {
         const connectionChain = [...lookUpElement]
         let connectionElement = foundSimilarities.find(element => element[0] === lookUpElement[1])
-        while (connectionElement && JSON.stringify(connectionElement.reverse()) !== JSON.stringify(connectionChain[connectionChain.length - 1])) {
+        while (connectionElement && connectionChain[connectionChain.length - 1] !== connectionElement[1] && connectionChain[connectionChain.length - 1] !== connectionElement[0]) {
           connectionChain.push(connectionElement[1])
           maxConnectChain = Math.max(connectionChain.length, maxConnectChain)
           connectionElement = foundSimilarities.find(element => element[0] === connectionElement[1])
@@ -124,13 +137,14 @@ const parseData = (data) => {
     }
     unitedData.push(tempElement)
   }
-  console.log('time to unite elements', (Date.now() - splitUniteTime) / 1000, 'seconds')
-  console.log('Max chain of connected routes', maxConnectChain)
-  console.log('amount of datapoints', unitedData.length)
-  console.log('data simplified by', Math.round((1 - (unitedData.length / (strippedData.length + removedDataPoints))) * 100), '%')
+  if (verbose) {
+    console.log('time to unite elements', (Date.now() - splitUniteTime) / 1000, 'seconds')
+    console.log('Max chain of connected routes', maxConnectChain)
+    console.log('amount of datapoints', unitedData.length)
+    console.log('data simplified by', Math.round((1 - (unitedData.length / (strippedData.length + removedDataPoints))) * 100), '%')
+  }
 
-  const projectionChangeTime = Date.now()
-  const tranformedData = unitedData.map(element => { return { ...element, coordinates: element.coordinates.map(element => element.split(',').map(element => Number(element)).reverse()) } })
+  const tranformedData = unitedData.map(element => { return { ...element, coordinates: element.coordinates.map(element => element.split(',').map(element => Number(element)).reverse()) } }).filter(element => element.coordinates.length > 6)
 
 
   const getPerpendicularDistance = (point, line) => {
@@ -173,21 +187,27 @@ const parseData = (data) => {
   }
   const optimizeTime = Date.now()
   const optimizedData = tranformedData.map(element => { return { ...element, coordinates: douglasPeuckerOptimiser(element.coordinates, 1 / 100000) } })
-  console.log('optimized data in ', (Date.now() - optimizeTime) / 1000, 'seconds')
+  if (verbose) {
+    console.log('optimized data in ', (Date.now() - optimizeTime) / 1000, 'seconds')
+    const unOptimizedDataLen = tranformedData.reduce((partialSum, element) => partialSum + element.coordinates.length, 0)
+    const optimizedDataLen = optimizedData.reduce((partialSum, element) => partialSum + element.coordinates.length, 0)
+    console.log('unoptimized gps trace waypoints', unOptimizedDataLen)
+    console.log('optimized gps trace waypoints', optimizedDataLen)
+    console.log('difference to unoptimized', Math.round((1 - optimizedDataLen / unOptimizedDataLen) * 100), '%')
+  }
 
-  const unOptimizedDataLen = tranformedData.reduce((partialSum, element) => partialSum + element.coordinates.length, 0)
-  const optimizedDataLen = optimizedData.reduce((partialSum, element) => partialSum + element.coordinates.length, 0)
-  console.log('unoptimized gps trace waypoints', unOptimizedDataLen)
-  console.log('optimized gps trace waypoints', optimizedDataLen)
-  console.log('difference to unoptimized', Math.round((1 - optimizedDataLen / unOptimizedDataLen) * 100), '%')
+  const projectionChangeTime = Date.now()
   const returnData = optimizedData.map(element => { return { ...element, coordinates: element.coordinates.map(element => proj4(epsg3879.proj4, epsg4326.proj4, element.reverse())) } })
-  console.log('projection changed in', (Date.now() - projectionChangeTime) / 1000, 'seconds')
+  if (verbose) {
+    console.log('projection changed in', (Date.now() - projectionChangeTime) / 1000, 'seconds')
+  }
+
   const geoJson = {
     timestamp: Date.now(),
     geoJson: {
       type: 'FeatureCollection',
       features:
-        returnData.map(element => {
+        returnData.sort((a, b) => a.time > b.time ? 1 : -1).map(element => {
           return {
             type: 'Feature',
             geometry: {
@@ -195,7 +215,8 @@ const parseData = (data) => {
               coordinates: element.coordinates
             },
             properties: {
-              time: element.time
+              time: element.time,
+              roadName: element.roadName
             }
           }
         })

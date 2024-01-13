@@ -6,7 +6,15 @@ interface returnObject {
   type: string,
   timestamp: number
 }
-const API_URL = 'http://localhost:3001/api/snowplow'
+
+let API_URL = ''
+if (process.env.NODE_ENV === 'development') {
+  API_URL = 'http://localhost:3001/api/snowplow'
+} else {
+  API_URL = 'https://auraseuranta-backend.onrender.com/api/snowplow'
+}
+
+console.log(API_URL)
 const getPlowData = async (): Promise<returnObject> => {
   return (await axios.get(API_URL)).data
 }

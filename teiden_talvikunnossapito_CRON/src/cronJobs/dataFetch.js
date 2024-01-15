@@ -34,16 +34,20 @@ const parseData = (data, verbose, noProj) => {
       roadName: element['GIS:AuratKartalla']['GIS:Kadunnimi']
     })
   }
+  const originalDataPoints = strippedData.reduce((prev, curr) => prev + curr.coordinates.length, 0)
   if (verbose) {
-    console.log('data transformed and stripped in', (Date.now() - parseTime) / 1000, 'seconds')
-    console.log('number of datapoints', strippedData.length)
-    console.log('number of datapoints removed', removedDataPoints, removedDataPoints / strippedData.length)
+    console.log('---------------------------------')
+    console.log('Data parsed and cleaned in', (Date.now() - parseTime) / 1000, 'seconds')
+    console.log('Number of routes', strippedData.length)
+    console.log('Number of coordinate tuples in data', originalDataPoints)
+    console.log('Number of datapoints removed', removedDataPoints, Math.round((removedDataPoints / strippedData.length) * 100), '%')
+    console.log('---------------------------------')
   }
 
   /**
    * Building a hash table using road names as index
   */
-  const hashBuildTime = Date.now()
+  const dataCleanTime = Date.now()
   let maxChain = 0
   const strippedHashArray = new Map()
   strippedData.forEach(element => {
@@ -56,15 +60,9 @@ const parseData = (data, verbose, noProj) => {
       maxChain = Math.max(tempArray.length, maxChain)
     }
   })
-  if (verbose) {
-    console.log('stripped hash array length', strippedHashArray.size)
-    console.log('stripped hash table max chain', maxChain)
-    console.log('stripped hash table built in ', (Date.now() - hashBuildTime) / 1000, 'seconds')
-  }
   /**
    * Finding duplicate data based on coordinates and timestamps
    */
-  const duplicateFoundTime = Date.now()
   const duplicateIndecies = new Set()
   for (let i = 0; i < strippedData.length; i++) {
     const subArray = strippedHashArray.get(strippedData[i].roadName)
@@ -84,27 +82,22 @@ const parseData = (data, verbose, noProj) => {
       }
     }
   }
-  if (verbose) {
-    console.log('amount of duplicates', duplicateIndecies.size, duplicateIndecies.size / (strippedData.length))
-    console.log('duplicates found in', (Date.now() - duplicateFoundTime) / 1000, 'seconds')
-  }
   /**
-   * Removing found duplicated from data
-   */
-  const duplicateRemoveTime = Date.now()
+   * Removing found duplicates from data
+  */
   const parsedData = []
-  for (let i = 0; i < strippedData.length; i++) { //Remove duplicates from data
+  for (let i = 0; i < strippedData.length; i++) {
     if (duplicateIndecies.has(strippedData[i].id)) {
       continue
     }
     parsedData.push(strippedData[i])
   }
-  if (verbose) {
-    console.log('Data cleaned in', (Date.now() - duplicateRemoveTime) / 1000, 'seconds')
-  }
-  const parsedHashArrayTime = Date.now()
+
+
+  /**
+   * Build hash table again based on road names to find connectable routes
+  */
   maxChain = 0
-  let maxChainValue = []
   const parsedHashArray = new Map()
   parsedData.forEach(element => {
     const localIndex = element.roadName
@@ -121,148 +114,96 @@ const parseData = (data, verbose, noProj) => {
     }
   })
   if (verbose) {
-    console.log('parsed hash array length', parsedHashArray.size)
-    console.log('parsed hash table max chain', maxChain)
-    console.log('parsed hash table built in ', (Date.now() - parsedHashArrayTime) / 1000, 'seconds')
+    console.log('Duplicates found in data', duplicateIndecies.size, Math.round((duplicateIndecies.size / strippedData.length) * 100), '%')
+    console.log('Data cleaned from duplicates in', (Date.now() - dataCleanTime) / 1000, 'seconds')
+    console.log('---------------------------------')
   }
 
   /**
-   * Build hash table again based on road names to find connectable routes
+   * Find connectable routes
    */
   const similaritiesTime = Date.now()
-  const foundSimilarities = []
+  const foundSimilarities = new Map()
+
   for (let i = 0; i < parsedData.length; i++) {
+    if (foundSimilarities.has(parsedData[i].id)) {
+      continue
+    }
     const subArray = parsedHashArray.get(parsedData[i].roadName)
     for (let y = 0; y < subArray.length; y++) {
       if (parsedData[i].id !== subArray[y].id
         && parsedData[i].time - subArray[y].time === 60000
-        && parsedData[i].coordinates[0][0] === subArray[y].coordinates[subArray[y].coordinates.length - 1][0]
-        && parsedData[i].coordinates[0][1] === subArray[y].coordinates[subArray[y].coordinates.length - 1][1]) {
-        foundSimilarities.push([subArray[y].id, parsedData[i].id])
+        && parsedData[i].coordinates[parsedData[i].coordinates.length - 1][0] === subArray[y].coordinates[0][0]
+        && parsedData[i].coordinates[parsedData[i].coordinates.length - 1][1] === subArray[y].coordinates[0][1]) {
+        foundSimilarities.set(parsedData[i].id, [parsedData[i].id, subArray[y].id])
       }
     }
   }
 
-  if (verbose) {
-    console.log('Split routes found in', (Date.now() - similaritiesTime) / 1000, 'seconds')
-    console.log('possible split routes found', foundSimilarities.length)
-    const splitRoutes = new Set()
-    foundSimilarities.map(element => splitRoutes.add(element))
-    console.log('duplicates in similarity data', foundSimilarities.length - splitRoutes.size)
-  }
-
   /**
-   * Unite datapoints found in previous step and remove unnecessary ones
-   */
-  const splitUniteTime = Date.now()
-  const unitedData = []
-  let maxConnectChain = 0
-  for (let i = 0; i < parsedData.length; i++) {
-    maxConnectChain = 0
-    let tempElement = parsedData[i]
-    const lookUpElement = foundSimilarities.find(element => element[0] === parsedData[i].id || element[1] === parsedData[i].id)
-    if (lookUpElement) {
-      if (lookUpElement[0] === tempElement.id) {
-        maxConnectChain++
-        const connectionChain = [...lookUpElement]
-        let connectionElement = foundSimilarities.find(element => element[0] === lookUpElement[1])
-        while (connectionElement && connectionChain.indexOf(connectionElement[1]) === -1) {
-          connectionChain.push(connectionElement[1])
-          maxConnectChain = Math.max(connectionChain.length, maxConnectChain)
-          connectionElement = foundSimilarities.find(element => element[0] === connectionElement[1])
-        }
-        const coords = []
-        connectionChain.map(connectionElement => coords.push(...(parsedData.find(element => element.id === connectionElement)).coordinates.splice(1)))
-        tempElement = { ...tempElement, coordinates: coords }
-      } else if (lookUpElement[1] === tempElement.id) {
-        continue
+   * Finds chains of connectable routes and marking routes for deletion
+   * Removes all routes under 6 waypoints
+   * Optimizes routes with Douglas-Peucker
+   * Changes projection from epsg3879 to epsg4326 for Leaflet
+  */
+  const foundChains = []
+  const elementstoDelete = new Set()
+  maxChain = 0
+  const parsedDataHash = new Map()
+  parsedData.forEach(element => {
+    parsedDataHash.set(element.id, element)
+    const connectionChain = foundSimilarities.get(element.id) || [element.id]
+    if (connectionChain.length > 1) {
+      elementstoDelete.add(connectionChain[1])
+      let nextElement = foundSimilarities.get(connectionChain[1])
+      while (nextElement) {
+        elementstoDelete.add(nextElement[1])
+        connectionChain.push(nextElement[1])
+        nextElement = foundSimilarities.get(connectionChain[connectionChain.length - 1])
       }
     }
-    unitedData.push(tempElement)
-  }
+    foundChains.push(connectionChain)
+  })
+
+  const cleanedChains = []
+  foundChains.forEach(element => {
+    if (elementstoDelete.has(element[0])) {
+      return
+    }
+    const tempCoords = []
+    element.map(idElement => tempCoords.push(...parsedDataHash.get(idElement).coordinates.splice(1).map(coordTuple => coordTuple.reverse())))
+    if (tempCoords.length < 6) {
+      return
+    }
+    const headElement = parsedDataHash.get(element[0])
+    cleanedChains.push({
+      ...headElement, coordinates: noProj
+        ? douglasPeuckerOptimiser(tempCoords, 1 / 100000)
+        : douglasPeuckerOptimiser(tempCoords, 1 / 100000).map(element => proj4(epsg3879.proj4, epsg4326.proj4, element.reverse()))
+    })
+  })
+
   if (verbose) {
-    console.log('time to unite elements', (Date.now() - splitUniteTime) / 1000, 'seconds')
-    console.log('Max chain of connected routes', maxConnectChain)
-    console.log('amount of datapoints', unitedData.length)
-    console.log('data simplified by', Math.round((1 - (unitedData.length / (strippedData.length + removedDataPoints))) * 100), '%')
-  }
-  /**
-   * Remove all datapoints that contain under 6 waypoints
-   */
-  const tranformedData = unitedData.map(element => { return { ...element, coordinates: element.coordinates.map(element => element.reverse()) } }).filter(element => element.coordinates.length > 6)
-
-  /**
-   * Helper function for Douglas-Peucker optimizer
-   */
-  const getPerpendicularDistance = (point, line) => {
-    const pointX = point[0]
-    const pointY = point[1]
-    const lineStart = {
-      x: line[0][0],
-      y: line[0][1]
-    }
-    const lineEnd = {
-      x: line[1][0],
-      y: line[1][1]
-    }
-    const slope = (lineEnd.y - lineStart.y) / (lineEnd.x - lineStart.x)
-    const intercept = lineStart.y - (slope * lineStart.x)
-    const result = Math.abs(slope * pointX - pointY + intercept) / Math.sqrt(Math.pow(slope, 2) + 1);
-    return result;
-  }
-
-  const douglasPeuckerOptimiser = (route, epsilon) => {
-    let maxDistance = 0
-    let index = 0
-    const end = route.length - 1
-    for (let i = 1; i < end; i++) {
-      const distance = getPerpendicularDistance(route[i], [route[0], route[end]])
-      if (distance > maxDistance) {
-        index = i
-        maxDistance = distance
-      }
-    }
-    const resultList = []
-    if (maxDistance > epsilon) {
-      const results1 = douglasPeuckerOptimiser(route.slice(0, index), epsilon)
-      const results2 = douglasPeuckerOptimiser(route.slice(index, end), epsilon)
-      resultList.push(...results1.concat(results2))
-    } else {
-      resultList.push(...route)
-    }
-    return resultList
+    const finalDataPoints = cleanedChains.reduce((prev, curr) => prev + curr.coordinates.length, 0)
+    console.log('Split routes united, optimized and projected to lat-lon in', (Date.now() - similaritiesTime) / 1000, 'seconds')
+    console.log('Connectable routes found', foundSimilarities.size)
+    console.log('Elements to delete', elementstoDelete.size)
+    console.log('Number of routes after optimization', cleanedChains.length)
+    console.log('Routes optimized by', Math.round((1 - cleanedChains.length / strippedData.length) * 100), '%')
+    console.log('Number of coordinate tuples in data after optimization', finalDataPoints)
+    console.log('Data optimized by', Math.round((1 - finalDataPoints / originalDataPoints) * 100), '%')
+    console.log('---------------------------------')
   }
 
   /**
-   * Optimizing remaining datapoints with Douglas-Peucker
-   */
-  const optimizeTime = Date.now()
-  const optimizedData = tranformedData.map(element => { return { ...element, coordinates: douglasPeuckerOptimiser(element.coordinates, 1 / 100000) } })
-  if (verbose) {
-    console.log('optimized data in ', (Date.now() - optimizeTime) / 1000, 'seconds')
-    const unOptimizedDataLen = tranformedData.reduce((partialSum, element) => partialSum + element.coordinates.length, 0)
-    const optimizedDataLen = optimizedData.reduce((partialSum, element) => partialSum + element.coordinates.length, 0)
-    console.log('unoptimized gps trace waypoints', unOptimizedDataLen)
-    console.log('optimized gps trace waypoints', optimizedDataLen)
-    console.log('difference to unoptimized', Math.round((1 - optimizedDataLen / unOptimizedDataLen) * 100), '%')
-  }
-  /**
-   * Switch projection to lat-lon representation
-   */
-  const projectionChangeTime = Date.now()
-  const returnData = optimizedData.map(element => { return { ...element, coordinates: noProj ? element.coordinates.reverse() : element.coordinates.map(element => proj4(epsg3879.proj4, epsg4326.proj4, element.reverse())) } })
-  if (verbose) {
-    console.log('projection changed in', (Date.now() - projectionChangeTime) / 1000, 'seconds')
-  }
-  /**
-   * Create a single geoJSON layer for backend
+   * Create a single GeoJSON layer
    */
   const geoJson = {
     timestamp: Date.now(),
     geoJson: {
       type: 'FeatureCollection',
       features:
-        returnData.sort((a, b) => a.time > b.time ? 1 : -1).map(element => {
+        cleanedChains.sort((a, b) => a.time > b.time ? 1 : -1).map(element => {
           return {
             type: 'Feature',
             geometry: {
@@ -278,6 +219,49 @@ const parseData = (data, verbose, noProj) => {
     }
   }
   return geoJson
+}
+
+
+/**
+* Helper function for Douglas-Peucker optimizer
+*/
+const getPerpendicularDistance = (point, line) => {
+  const pointX = point[0]
+  const pointY = point[1]
+  const lineStart = {
+    x: line[0][0],
+    y: line[0][1]
+  }
+  const lineEnd = {
+    x: line[1][0],
+    y: line[1][1]
+  }
+  const slope = (lineEnd.y - lineStart.y) / (lineEnd.x - lineStart.x)
+  const intercept = lineStart.y - (slope * lineStart.x)
+  const result = Math.abs(slope * pointX - pointY + intercept) / Math.sqrt(Math.pow(slope, 2) + 1);
+  return result;
+}
+
+const douglasPeuckerOptimiser = (route, epsilon) => {
+  let maxDistance = 0
+  let index = 0
+  const end = route.length - 1
+  for (let i = 1; i < end; i++) {
+    const distance = getPerpendicularDistance(route[i], [route[0], route[end]])
+    if (distance > maxDistance) {
+      index = i
+      maxDistance = distance
+    }
+  }
+  const resultList = []
+  if (maxDistance > epsilon) {
+    const results1 = douglasPeuckerOptimiser(route.slice(0, index), epsilon)
+    const results2 = douglasPeuckerOptimiser(route.slice(index, end), epsilon)
+    resultList.push(...results1.concat(results2))
+  } else {
+    resultList.push(...route)
+  }
+  return resultList
 }
 
 module.exports = parseData

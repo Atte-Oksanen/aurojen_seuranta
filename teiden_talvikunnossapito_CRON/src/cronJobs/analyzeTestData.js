@@ -1,7 +1,7 @@
 const parseData = require('./dataFetch')
 const fs = require('fs')
 const data = (fs.readFileSync('../testData/testData_28.12.23.xml')).toString()
-const parsedData = parseData(data, true, true)
+const parsedData = parseData(data, true, false)
 console.log(parsedData.geoJson.features[0].properties)
 let maxChain = 0
 let maxChainValue = ''

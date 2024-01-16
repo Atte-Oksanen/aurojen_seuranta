@@ -2,6 +2,7 @@ const { XMLParser } = require('fast-xml-parser')
 const epsg3879 = require('epsg-index/s/3879.json')
 const epsg4326 = require('epsg-index/s/4326.json')
 const proj4 = require('proj4')
+const simplify = require('simplify-js')
 
 const parseData = (data, verbose, noProj) => {
   const parseTime = Date.now()
@@ -18,6 +19,7 @@ const parseData = (data, verbose, noProj) => {
     const element = json['wfs:FeatureCollection']['gml:featureMember'][i]
     const workType = element['GIS:AuratKartalla']['GIS:tyolajit'].split(', ').map(element => element.replace(/,/g, ''))
     if (!workType.includes('auraus')) {
+      removedDataPoints++
       continue
     }
     const coords = element['GIS:AuratKartalla']['GIS:Geometry']['gml:LineString']['gml:coordinates'].split(' ')
@@ -64,21 +66,24 @@ const parseData = (data, verbose, noProj) => {
    * Finding duplicate data based on coordinates and timestamps
    */
   const duplicateIndecies = new Set()
+  let loops = 0
   for (let i = 0; i < strippedData.length; i++) {
-    const subArray = strippedHashArray.get(strippedData[i].roadName)
+    const subArray = strippedHashArray.get(strippedData[i].roadName).filter(element => element.time === strippedData[i].time && strippedData[i].id !== element.id)
     for (let y = 0; y < subArray.length; y++) {
-      if (strippedData[i].time === subArray[y].time && strippedData[i].id !== subArray[y].id) {
-        const smallerArray = strippedData[i].coordinates.length < subArray[y].coordinates.length ? strippedData[i] : subArray[y]
-        const biggerArray = strippedData[i].coordinates.length > subArray[y].coordinates.length ? strippedData[i] : subArray[y]
-        let hits = 0
-        for (let x = 0; x < smallerArray.coordinates.length; x++) {
-          if (biggerArray.coordinates.findIndex(element => element[0] === smallerArray.coordinates[x][0] && element[1] === smallerArray.coordinates[x][1]) !== -1) {
-            hits++
-          }
+      const smallerArray = strippedData[i].coordinates.length < subArray[y].coordinates.length ? strippedData[i] : subArray[y]
+      const biggerArray = strippedData[i].coordinates.length > subArray[y].coordinates.length ? strippedData[i] : subArray[y]
+      if (duplicateIndecies.has(smallerArray.id)) {
+        continue
+      }
+      let hits = 0
+      for (let x = 0; x < smallerArray.coordinates.length && hits < smallerArray.coordinates.length * 0.1; x++) {
+        loops++
+        if (biggerArray.coordinates.findIndex(element => element[0] === smallerArray.coordinates[x][0] && element[1] === smallerArray.coordinates[x][1]) !== -1) {
+          hits++
         }
-        if (hits >= smallerArray.coordinates.length * 0.1) {
-          duplicateIndecies.add(smallerArray.id)
-        }
+      }
+      if (hits >= smallerArray.coordinates.length * 0.1) {
+        duplicateIndecies.add(smallerArray.id)
       }
     }
   }
@@ -93,6 +98,13 @@ const parseData = (data, verbose, noProj) => {
     parsedData.push(strippedData[i])
   }
 
+
+  if (verbose) {
+    console.log('Duplicates found in data', duplicateIndecies.size, Math.round((duplicateIndecies.size / strippedData.length) * 100), '%')
+    console.log('Data cleaned from duplicates in', (Date.now() - dataCleanTime) / 1000, 'seconds')
+    console.log('loops to find duplicates', loops)
+    console.log('---------------------------------')
+  }
 
   /**
    * Build hash table again based on road names to find connectable routes
@@ -113,15 +125,9 @@ const parseData = (data, verbose, noProj) => {
 
     }
   })
-  if (verbose) {
-    console.log('Duplicates found in data', duplicateIndecies.size, Math.round((duplicateIndecies.size / strippedData.length) * 100), '%')
-    console.log('Data cleaned from duplicates in', (Date.now() - dataCleanTime) / 1000, 'seconds')
-    console.log('---------------------------------')
-  }
-
   /**
    * Find connectable routes
-   */
+  */
   const similaritiesTime = Date.now()
   const foundSimilarities = new Map()
 
@@ -130,13 +136,12 @@ const parseData = (data, verbose, noProj) => {
       continue
     }
     const subArray = parsedHashArray.get(parsedData[i].roadName)
-    for (let y = 0; y < subArray.length; y++) {
-      if (parsedData[i].id !== subArray[y].id
-        && parsedData[i].time - subArray[y].time === 60000
-        && parsedData[i].coordinates[parsedData[i].coordinates.length - 1][0] === subArray[y].coordinates[0][0]
-        && parsedData[i].coordinates[parsedData[i].coordinates.length - 1][1] === subArray[y].coordinates[0][1]) {
-        foundSimilarities.set(parsedData[i].id, [parsedData[i].id, subArray[y].id])
-      }
+      .filter(filterElement => parsedData[i].id !== filterElement.id
+        && parsedData[i].time - filterElement.time === 60000
+        && parsedData[i].coordinates[parsedData[i].coordinates.length - 1][0] === filterElement.coordinates[0][0]
+        && parsedData[i].coordinates[parsedData[i].coordinates.length - 1][1] === filterElement.coordinates[0][1])
+    if (subArray.length === 1) {
+      foundSimilarities.set(parsedData[i].id, [parsedData[i].id, subArray[0].id])
     }
   }
 
@@ -175,13 +180,17 @@ const parseData = (data, verbose, noProj) => {
     if (tempCoords.length < 6) {
       return
     }
-    const headElement = parsedDataHash.get(element[0])
+    const unique = [...new Set(tempCoords.map(element => element.toString()))].map(element => element.split(',').map(splitElement => Number(splitElement)))
+    const optimizedCoords = simplify(unique.map(coordTuple => { return { x: coordTuple[0], y: coordTuple[1] } }), 5, true).map(coordTuple => [coordTuple.x, coordTuple.y])
     cleanedChains.push({
-      ...headElement, coordinates: noProj
-        ? douglasPeuckerOptimiser(tempCoords, 1 / 100000)
-        : douglasPeuckerOptimiser(tempCoords, 1 / 100000).map(element => proj4(epsg3879.proj4, epsg4326.proj4, element.reverse()))
+      ...parsedDataHash.get(element[0]),
+      coordinates:
+        noProj
+          ? optimizedCoords
+          : optimizedCoords.map(element => proj4(epsg3879.proj4, epsg4326.proj4, element.reverse()))
     })
   })
+
 
   if (verbose) {
     const finalDataPoints = cleanedChains.reduce((prev, curr) => prev + curr.coordinates.length, 0)
@@ -222,46 +231,5 @@ const parseData = (data, verbose, noProj) => {
 }
 
 
-/**
-* Helper function for Douglas-Peucker optimizer
-*/
-const getPerpendicularDistance = (point, line) => {
-  const pointX = point[0]
-  const pointY = point[1]
-  const lineStart = {
-    x: line[0][0],
-    y: line[0][1]
-  }
-  const lineEnd = {
-    x: line[1][0],
-    y: line[1][1]
-  }
-  const slope = (lineEnd.y - lineStart.y) / (lineEnd.x - lineStart.x)
-  const intercept = lineStart.y - (slope * lineStart.x)
-  const result = Math.abs(slope * pointX - pointY + intercept) / Math.sqrt(Math.pow(slope, 2) + 1);
-  return result;
-}
-
-const douglasPeuckerOptimiser = (route, epsilon) => {
-  let maxDistance = 0
-  let index = 0
-  const end = route.length - 1
-  for (let i = 1; i < end; i++) {
-    const distance = getPerpendicularDistance(route[i], [route[0], route[end]])
-    if (distance > maxDistance) {
-      index = i
-      maxDistance = distance
-    }
-  }
-  const resultList = []
-  if (maxDistance > epsilon) {
-    const results1 = douglasPeuckerOptimiser(route.slice(0, index), epsilon)
-    const results2 = douglasPeuckerOptimiser(route.slice(index, end), epsilon)
-    resultList.push(...results1.concat(results2))
-  } else {
-    resultList.push(...route)
-  }
-  return resultList
-}
 
 module.exports = parseData

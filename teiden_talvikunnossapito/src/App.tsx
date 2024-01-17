@@ -3,7 +3,10 @@ import MapComponent from './components/MapComponent'
 function App() {
 
   return (
-    <MapComponent />
+    <div>
+      <h1>Aurojen seuranta</h1>
+      <MapComponent />
+    </div>
   )
 }
 

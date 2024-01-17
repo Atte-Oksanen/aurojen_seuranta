@@ -10,22 +10,22 @@ const MapComponent = () => {
   const lat = 60.15976
   const lon = 24.72423
   const [coords, setCoords] = useState<GeoJsonObject>()
-  const [timestamp, setTimestamp] = useState<number>()
+  const [timestamp, setTimestamp] = useState<Date>()
 
   useEffect(() => {
     const primeData = async () => {
-      const plowData = await plowService.getPlowData() 
+      const plowData = await plowService.getPlowData()
       setCoords(plowData.geoJson)
-      setTimestamp(plowData.timestamp)
+      setTimestamp(new Date(plowData.timestamp))
     }
     primeData()
   }, [])
-  
+
 
   return (
     <div>
-      {timestamp && <h2>{new Date(timestamp).toString()}</h2>}
-      <MapContainer center={[lat, lon]} zoom={12.5} ref={mapRef} style={{ height: '100vh', width: '100vw' }}>
+      {timestamp && <div>Reitit noudettu viimeksi {`${timestamp.toLocaleDateString('fi-FI')} kello ${timestamp.getHours()}.${timestamp.getMinutes()}`}</div>}
+      <MapContainer center={[lat, lon]} zoom={12.5} ref={mapRef} style={{ height: '85vh', width: '95vw' }}>
         <TileLayer
           url="https://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png" />
         <LayerGroup>

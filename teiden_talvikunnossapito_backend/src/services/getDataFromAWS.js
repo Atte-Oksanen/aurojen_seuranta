@@ -9,7 +9,8 @@ const getPlowData = async () => {
     })
     const res = await client.send(command)
     const resStr = await res.Body.transformToString()
-    console.log('data fetched')
+    const timeNow = new Date(Date.now()).toUTCString()
+    console.log('data fetched at', timeNow)
     return JSON.parse(resStr)
 }
 

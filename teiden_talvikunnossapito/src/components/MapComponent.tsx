@@ -24,6 +24,7 @@ const MapComponent = () => {
 
   return (
     <div>
+      {!timestamp && <div>Ladataan reittejä</div>}
       {timestamp && <div>Reitit noudettu viimeksi {`${timestamp.toLocaleDateString('fi-FI')} kello ${timestamp.getHours()}.${timestamp.getMinutes()}`}</div>}
       <MapContainer center={[lat, lon]} zoom={12.5} ref={mapRef} style={{ height: '85vh', width: '95vw' }}>
         <TileLayer

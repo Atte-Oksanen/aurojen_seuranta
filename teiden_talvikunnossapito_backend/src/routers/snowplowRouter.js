@@ -1,7 +1,5 @@
 const getDataFromAWS = require('../services/getDataFromAWS')
 const snowplowRouter = require('express').Router()
-console.log('data load started')
-const startTime = Date.now()
 let snowPlowData = null
 
 const primeData = async () => {
@@ -9,6 +7,8 @@ const primeData = async () => {
 }
 
 primeData()
+
+setInterval(() => primeData(), 7200000)
 
 
 snowplowRouter.get('/', (req, res) => {

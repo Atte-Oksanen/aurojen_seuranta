@@ -1,39 +1,40 @@
 import { useEffect, useState } from 'react'
+import { Routes, Route, Link } from 'react-router-dom'
 import MapComponent from './components/MapComponent'
+import SearchComponent from './components/SearchComponent'
 import roadNameService from './services/roadNames'
-
-interface roadObject {
-  roadName: string,
-  timeStamp: Date,
-  id: string
-}
+import plowService from './services/plowActivity'
+import { GeoJsonObject } from 'geojson'
+import { roadObject } from './types/roadName'
 
 function App() {
-  const [searchText, setSearchText] = useState<string>('')
   const [roadNames, setRoadNames] = useState<roadObject[]>()
-  const [searchResults, setSearchResults] = useState<roadObject[]>()
+  const [coords, setCoords] = useState<GeoJsonObject>()
+  const [timestamp, setTimestamp] = useState<Date>()
+
 
   useEffect(() => {
-    const primeRoadNames = async () => {
+    const primeData = async () => {
+      const plowData = await plowService.getPlowData()
+      setCoords(plowData.geoJson)
+      setTimestamp(new Date(plowData.timestamp))
       const roadnamesTemp = await roadNameService.getRoadNames()
       setRoadNames(roadnamesTemp.map(element => { return { ...element, timeStamp: new Date(element.timeStamp) } }))
     }
-    primeRoadNames()
+    primeData()
   }, [])
 
-  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchText(event.target.value)
-    setSearchResults(roadNames?.filter(element => element.roadName.toLowerCase().includes(event.target.value.toLowerCase())))
-  }
+
   return (
     <div>
       <h1>Aurojen seuranta</h1>
-      <input placeholder='Hae katua nimellä' type='text' value={searchText} onChange={event => handleSearch(event)} />
-      {searchResults
-        && searchText.length > 2
-        && searchResults.map(element => <div key={element.id}>{element.roadName} viimeksi aurattu {element.timeStamp.toLocaleDateString('fi-FI')} kello {element.timeStamp.getHours()}.{element.timeStamp.getMinutes() < 10 ? '0' : ''}{element.timeStamp.getMinutes()}</div>)}
-      {searchResults && searchResults.length < 1 && <div>Ei tuloksia</div>}
-      <MapComponent />
+      <Link to='/'>Kartta</Link>
+      <br />
+      <Link to='/hae'>Hae teitä</Link>
+      <Routes>
+        <Route path='/' element={coords && timestamp && <MapComponent coords={coords} timestamp={timestamp} />} />
+        <Route path='/hae' element={coords && roadNames && <SearchComponent roadNames={roadNames} />} />
+      </Routes>
     </div>
   )
 }

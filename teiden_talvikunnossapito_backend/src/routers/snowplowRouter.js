@@ -15,4 +15,5 @@ snowplowRouter.get('/', (req, res) => {
   res.json(snowPlowData)
 })
 
+
 module.exports = snowplowRouter

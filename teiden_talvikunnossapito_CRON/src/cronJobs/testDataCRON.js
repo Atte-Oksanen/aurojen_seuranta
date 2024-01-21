@@ -18,6 +18,7 @@ const updateDB = async () => {
     await client.send(command)
     console.log('new datapoint saved')
     console.info('Database updated in', Math.round((Date.now() - startTime) / 1000), 'seconds')
+    return parsedData
 }
 
 module.exports = updateDB

@@ -1,8 +1,9 @@
 const parseData = require('./dataFetch')
 const fs = require('fs')
-const data = (fs.readFileSync('../testData/testData_28.12.23.xml')).toString()
+const data = (fs.readFileSync('../testData/testData_30.12.23.xml')).toString()
 const dataParseTime = Date.now()
 const parsedData = parseData(data, true, false)
+fs.writeFileSync('dataSizeTest.json', JSON.stringify(parsedData))
 console.log('Data parsed in', (Math.round((Date.now() - dataParseTime) / 10)) / 100, 'seconds')
 console.log(parsedData.geoJson.features[0].properties)
 let maxChain = 0

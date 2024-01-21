@@ -15,6 +15,7 @@
     "dotenv": "^16.3.1",
     "epsg-index": "^2.0.0",
     "fast-xml-parser": "^4.3.3",
+    "mongoose": "^8.1.0",
     "proj4": "^2.10.0",
     "simplify-js": "^1.2.4"
   }

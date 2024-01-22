@@ -10,13 +10,15 @@ const updateMongo = async (inputPlowData) => {
             roadNamesWithTime.set(element.properties.roadName, element.properties.time)
         }
     })
-    Array.from(roadNamesWithTime).forEach(async element => {
+    const roadNameArray = Array.from(roadNamesWithTime)
+    for (let i = 0; i < roadNameArray.length; i++) {
         const newPlowData = {
-            timeStamp: element[1]
+            roadName: roadNameArray[i][0],
+            timeStamp: roadNameArray[i][1]
         }
-        await PlowData.findOneAndUpdate({ roadName: element[0] }, newPlowData, { upsert: true })
+        await PlowData.findOneAndUpdate({ roadName: newPlowData.roadName }, newPlowData, { upsert: true, new: true })
+    }
 
-    })
     console.log(`Updated plowing data for ${roadNamesWithTime.size} roads`)
 }
 

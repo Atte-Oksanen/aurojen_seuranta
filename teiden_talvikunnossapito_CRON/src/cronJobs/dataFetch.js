@@ -191,54 +191,6 @@ const parseData = (data, verbose, noProj) => {
     })
   })
 
-  // const getEucDistance = (pointA, pointB) => {
-  //   return Math.sqrt(Math.pow(pointA[0] - pointB[0], 2) + Math.pow(pointA[1] - pointB[1], 2))
-  // }
-  // const cleanedChainsMap = new Map()
-  // maxChain = 0
-  // cleanedChains.forEach(element => {
-  //   const localIndex = element.roadName
-  //   if (!cleanedChainsMap.has(localIndex)) {
-  //     cleanedChainsMap.set(localIndex, [element])
-  //   } else {
-  //     const tempArray = cleanedChainsMap.get(localIndex).concat([element])
-  //     cleanedChainsMap.set(localIndex, tempArray)
-  //     if (maxChain < tempArray.length) {
-  //       maxChainValue = tempArray[0].roadName
-  //     }
-  //     maxChain = Math.max(tempArray.length, maxChain)
-
-  //   }
-  // })
-  // console.log(maxChain, maxChainValue)
-  // const overlappedElements = new Set()
-  // cleanedChainsMap.forEach((testArray) => {
-  //   testArray.sort((a, b) => a.time - b.time).forEach(((element) => {
-  //     if (overlappedElements.has(element.id)) {
-  //       return
-  //     }
-  //     for (let i = Math.floor(testArray.length / 2); i < testArray.length; i++) {
-  //       if (element.id === testArray[i].id) {
-  //         continue
-  //       }
-  //       const startDistance = getEucDistance(element.coordinates[0], testArray[i].coordinates[0])
-  //       const crossDistance = getEucDistance(element.coordinates[0], testArray[i].coordinates[testArray[i].coordinates.length - 1])
-  //       if (crossDistance > startDistance) {
-  //         overlappedElements.add(testArray[i].id)
-  //       }
-  //     }
-  //   }))
-  // })
-  // console.log(overlappedElements.size / cleanedChains.length)
-
-  // const reducedChains = []
-  // cleanedChains.forEach(element => {
-  //   if (overlappedElements.has(element.id)) {
-  //     return
-  //   }
-  //   reducedChains.push(element)
-  // })
-  // console.log(reducedChains.length)
   if (verbose) {
     const finalDataPoints = cleanedChains.reduce((prev, curr) => prev + curr.coordinates.length, 0)
     console.log('Split routes united, optimized and projected to lat-lon in', (Date.now() - similaritiesTime) / 1000, 'seconds')
@@ -275,52 +227,6 @@ const parseData = (data, verbose, noProj) => {
     }
   }
   return geoJson
-}
-
-
-/**
-* Helper function for Douglas-Peucker optimizer
-*/
-
-const getSlope = line => {
-  if (line[0][0] === line[1][0]) {
-    line[0][0] = line[0][0] + 0.01
-  }
-  if (line[0][1] === line[1][1]) {
-    line[0][1] = line[0][1] + 0.01
-  }
-  return (line[1][1] - line[0][1]) / (line[1][0] - line[0][0])
-}
-
-const getPerpendicularDistance = (point, line) => {
-  const pointX = point[0]
-  const pointY = point[1]
-  const slope = getSlope(line)
-  const intercept = line[0][1] - (slope * line[0][0])
-  const result = Math.abs(slope * pointX - pointY + intercept) / Math.sqrt(Math.pow(slope, 2) + 1);
-  return result;
-}
-
-const douglasPeuckerOptimiser = (route, epsilon) => {
-  let maxDistance = 0
-  let index = 0
-  const end = route.length - 1
-  for (let i = 1; i < end; i++) {
-    const distance = getPerpendicularDistance(route[i], [route[0], route[end]])
-    if (distance > maxDistance) {
-      index = i
-      maxDistance = distance
-    }
-  }
-  const resultList = []
-  if (maxDistance > epsilon) {
-    const results1 = douglasPeuckerOptimiser(route.slice(0, index), epsilon)
-    const results2 = douglasPeuckerOptimiser(route.slice(index, end), epsilon)
-    resultList.push(...results1.concat(results2))
-  } else {
-    resultList.push(...route)
-  }
-  return resultList
 }
 
 module.exports = parseData

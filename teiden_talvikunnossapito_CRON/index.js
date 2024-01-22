@@ -9,7 +9,7 @@ const runCRON = async () => {
     await mongoose.connect(mongoURI)
     console.log('connected to MongoDB')
     await updateMongo(plowData)
-    process.exit(1)
+    process.exit(0)
 }
 
 runCRON()

@@ -1,18 +1,8 @@
-const getDataFromAWS = require('../services/getDataFromAWS')
 const snowplowRouter = require('express').Router()
-let snowPlowData = null
+const GeoJson = require('../models/plowGeoJson')
 
-const primeData = async () => {
-  snowPlowData = await getDataFromAWS()
-}
-
-primeData()
-
-setInterval(() => primeData(), 7200000)
-
-
-snowplowRouter.get('/', (req, res) => {
-  res.json(snowPlowData)
+snowplowRouter.get('/', async (req, res) => {
+  res.json(await GeoJson.find({}))
 })
 
 

@@ -15,7 +15,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 const getPlowData = async (): Promise<returnObject> => {
-  return (await axios.get(API_URL)).data
+  return (await axios.get(API_URL)).data[0]
 }
 
 export default { getPlowData }

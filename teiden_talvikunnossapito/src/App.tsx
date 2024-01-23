@@ -12,7 +12,6 @@ function App() {
   const [coords, setCoords] = useState<GeoJsonObject>()
   const [timestamp, setTimestamp] = useState<Date>()
 
-
   useEffect(() => {
     const primeData = async () => {
       const plowData = await plowService.getPlowData()

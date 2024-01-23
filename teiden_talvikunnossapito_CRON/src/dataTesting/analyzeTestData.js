@@ -1,4 +1,4 @@
-const parseData = require('./dataFetch')
+const parseData = require('../utils/dataParser')
 const fs = require('fs')
 const data = (fs.readFileSync('../testData/testData_30.12.23.xml')).toString()
 const dataParseTime = Date.now()

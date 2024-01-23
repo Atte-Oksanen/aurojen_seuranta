@@ -5,7 +5,7 @@ name: Updating snowplow database
 
 on:
   schedule: 
-    - cron: "0 */6 * * *"
+    - cron: "0 5-23/2 * * *"
   
 jobs:
   build:

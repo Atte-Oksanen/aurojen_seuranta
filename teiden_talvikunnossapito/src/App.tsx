@@ -26,14 +26,15 @@ function App() {
 
   return (
     <div>
-      <h1>Aurojen seuranta</h1>
-      <Link to='/'>Kartta</Link>
+      {roadNames && <SearchComponent roadNames={roadNames} />}
+      {<MapComponent coords={coords} timestamp={timestamp} />}
+      {/* <Link to='/'>Kartta</Link>
       <br />
       <Link to='/hae'>Hae teitä</Link>
       <Routes>
         <Route path='/' element={coords && timestamp && <MapComponent coords={coords} timestamp={timestamp} />} />
         <Route path='/hae' element={coords && roadNames && <SearchComponent roadNames={roadNames} />} />
-      </Routes>
+      </Routes> */}
     </div>
   )
 }

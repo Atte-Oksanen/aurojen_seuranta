@@ -6,9 +6,9 @@ const updateRoadData = async (inputPlowData) => {
     const roadNamesWithTime = new Map()
     inputData.forEach(element => {
         if (roadNamesWithTime.has(element.properties.roadName)) {
-            roadNamesWithTime.set(element.properties.roadName, Math.max(element.properties.time, roadNamesWithTime.get(element.properties.roadName)))
+            roadNamesWithTime.set(element.properties.roadName, { time: Math.max(element.properties.time, roadNamesWithTime.get(element.properties.roadName).time), coords: roadNamesWithTime.get(element.properties.roadName).coords })
         } else {
-            roadNamesWithTime.set(element.properties.roadName, element.properties.time)
+            roadNamesWithTime.set(element.properties.roadName, { time: element.properties.time, coords: element.geometry.coordinates[0] })
         }
     })
 
@@ -17,7 +17,7 @@ const updateRoadData = async (inputPlowData) => {
         return {
             updateOne: {
                 filter: { roadName: element[0] },
-                update: { $set: { roadName: element[0], timeStamp: element[1] } },
+                update: { $set: { roadName: element[0], timeStamp: element[1].time, coords: element[1].coords } },
                 upsert: true
             }
         }

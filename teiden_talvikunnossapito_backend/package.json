@@ -1,28 +1,26 @@
 {
-  "name": "teiden_talvikunnossapito_backend",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
-  },
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "nodemon": "^3.0.2"
-  },
-  "dependencies": {
-    "@aws-sdk/client-s3": "^3.490.0",
-    "axios": "^1.6.2",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "epsg-index": "^2.0.0",
-    "express": "^4.18.2",
-    "fast-xml-parser": "^4.3.2",
-    "leaflet": "^1.9.4",
-    "mongoose": "^8.1.0",
-    "proj4": "^2.9.2"
-  }
+    "name": "teiden_talvikunnossapito_backend",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "dev": "nodemon src/index.js",
+        "start": "node src/index.js"
+    },
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "nodemon": "^3.0.2"
+    },
+    "dependencies": {
+        "axios": "^1.6.2",
+        "cors": "^2.8.5",
+        "dotenv": "^16.3.1",
+        "express": "^4.18.2",
+        "fast-xml-parser": "^4.3.2",
+        "leaflet": "^1.9.4",
+        "mongoose": "^8.1.0",
+        "proj4": "^2.9.2"
+    }
 }

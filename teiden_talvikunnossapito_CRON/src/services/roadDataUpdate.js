@@ -12,6 +12,7 @@ const updateRoadData = async (inputPlowData) => {
         }
     })
 
+
     const roadNameArray = Array.from(roadNamesWithTime)
     const bulkOperations = roadNameArray.map(element => {
         return {

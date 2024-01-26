@@ -5,8 +5,8 @@ export const getColorFromTime = (time: number) => {
   // const degAmount = 1 - ((1703995200000 - time) / 216000000) //Sample time to match 30.12 dataset
   // const degAmount = 1 - ((1704136080000 - time) / 216000000) //Sample time to match 1.1 dataset
   const degAmount = 1 - ((Date.now() - (time)) / 216000000) //Current time
-  const hsv = { h: (155 * degAmount) / 360, s: 1, v: 1 * degAmount + 0.6 }
-  const hex = hsvToHex(hsv) 
+  const hsv = { h: (155 * degAmount) / 360, s: 1, v: degAmount + 0.6 }
+  const hex = hsvToHex(hsv)
   return !hex ? 'transparent' : hex
 }
 

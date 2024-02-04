@@ -26,7 +26,7 @@ const MapComponent = ({ coords, timestamp, mapCenter }: { coords: GeoJsonObject 
 
   return (
     <div>
-      <MapContainer center={mapCenter} zoom={12.5} ref={mapRef} style={{ width: '100vw', height: '100vh', zIndex: 1 }}>
+      <MapContainer preferCanvas={true} center={mapCenter} zoom={12.5} ref={mapRef} style={{ width: '100vw', height: '100vh', zIndex: 1 }}>
         <TileLayer
           url="https://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png" />
         <LayerGroup>

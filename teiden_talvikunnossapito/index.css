@@ -1,3 +1,184 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+@layer base {
+  @keyframes snowMoveSmall {
+    0%, 100% {
+    transform: translateY(-1%);
+    animation-timing-function: ease-in-out;
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: ease-in-out;
+  }
+  }
+  
+  @keyframes snowMoveMedium {
+    0%, 100% {
+    transform: translateY(-1.5%);
+    animation-timing-function: ease-in-out;
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: ease-in-out;
+  }
+  }
+
+  @keyframes snowMoveLarge {
+    0%, 100% {
+    transform: translateY(-2%);
+    animation-timing-function: ease-in-out;
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: ease-in-out;
+  }
+  }
+
+  @keyframes machineMove {
+    0%, 100% {
+    transform: translateY(-0.3%);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  50% {
+    transform: translate(0, 0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+  }
+
+  @keyframes lightBaseMove {
+  5%, 15%, 25%, 35%, 45%, 65%, 75%, 85%, 95% {
+    transform: translateY(-0.3%);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  10%, 20%, 30%, 40%, 50%, 60%, 70%, 80%, 90% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+  
+  45% {
+    transform: translateY(-3%);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  56% {
+    transform: translateY(-0.3%);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  }
+
+  @keyframes lightMove {
+   5%, 15%, 25%, 35%, 75%, 85%, 95% {
+    transform: translateY(-10%);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  10%, 20%, 30%, 40%, 70%, 80%, 90% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+  
+  40% {
+    scale: 1;
+  }
+  
+  45% {
+    scale: 1.2 0.5;
+  }
+
+  48% {
+    transform: translateY(-100%) rotate(0deg);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  52% {
+    scale: 1;
+    transform: translateY(-100%) rotate(0deg);
+  }
+
+  58% {
+    transform: translateY(-100%) rotate(360deg);
+  }
+
+  61% {
+    transform: rotate(0deg);
+    scale: 1;
+  }
+  
+  63% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  64% {
+    scale: 1.1 0.6;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  73%{
+    scale: 1
+  }
+
+  }
+
+  @keyframes plowMove {
+    0%, 100% {
+    transform: translateY(-0.3%);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  30% {
+    transform:translateX(-0.2%);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  50% {
+    transform: translate(0, 0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+  }
+
+  .animate-light-base {
+    animation: lightBaseMove 4s infinite
+  }
+
+  .animate-light {
+    animation: lightMove 4s infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .animate-snow-small {
+    animation: snowMoveSmall 0.6s infinite
+  }
+
+  .animate-snow-medium {
+    animation: snowMoveMedium 0.6s infinite
+  }
+
+  .animate-snow-large {
+    animation: snowMoveLarge 0.6s infinite
+  }
+
+  .animation-duration-1 {
+    animation-duration: 0.4s
+  }
+
+  .animation-duration-4 {
+    animation-duration: 0.8s
+  }
+
+  .animation-duration-3 {
+    animation-duration: 1s
+  }
+
+  .animate-machine {
+    animation: machineMove 0.3s infinite
+  }
+
+  .animate-plow {
+    animation: plowMove 0.2s infinite
+  }
+}

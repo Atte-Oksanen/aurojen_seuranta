@@ -20,9 +20,9 @@ const LoadingScreen = () => {
   return (
     <div className='flex items-center justify-center flex-col'>
       <div className='mt-10'>
-        <LoadingIcon sizeClass={'h-[60vh] w-[60vh'} />
+        <LoadingIcon sizeClass={'md:h-[60vh] md:w-[60vh] h-[40vh] w-[40vh]'} />
       </div>
-      <h2 className='text-xl text-left w-40'>Ladataan reittejä{dots}</h2>
+      <h2 className='md:text-xl text-left w-40'>Ladataan reittejä{dots}</h2>
     </div>
   )
 }

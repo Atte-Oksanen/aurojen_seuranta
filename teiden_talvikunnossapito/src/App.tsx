@@ -18,10 +18,12 @@ function App() {
   useEffect(() => {
     const primeData = async () => {
       const plowData = await plowService.getPlowData()
-      setCoords(plowData.geoJson)
-      setTimestamp(new Date(plowData.timestamp))
       const roadnamesTemp = await roadNameService.getRoadNames()
-      setRoadNames(roadnamesTemp.map(element => { return { ...element, timeStamp: new Date(element.timeStamp) } }))
+      setTimeout(() => {
+        setCoords(plowData.geoJson)
+        setTimestamp(new Date(plowData.timestamp))
+        setRoadNames(roadnamesTemp.map(element => { return { ...element, timeStamp: new Date(element.timeStamp) } }))
+      }, 1500)
     }
     primeData()
   }, [])

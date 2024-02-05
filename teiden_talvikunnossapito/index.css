@@ -178,6 +178,10 @@
     animation: machineMove 0.3s infinite
   }
 
+  .animate-machine-inside {
+    animation: machineMove 0.35s infinite
+  }
+
   .animate-plow {
     animation: plowMove 0.2s infinite
   }

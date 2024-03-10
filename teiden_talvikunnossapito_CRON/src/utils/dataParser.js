@@ -18,7 +18,8 @@ const parseData = (data, verbose, noProj) => {
   for (let i = 0; i < testLimit; i++) {
     const element = json['wfs:FeatureCollection']['gml:featureMember'][i]
     const workType = element['GIS:AuratKartalla']['GIS:tyolajit'].split(', ').map(element => element.replace(/,/g, ''))
-    if (!workType.includes('auraus')) {
+    const time = new Date(element['GIS:AuratKartalla']['GIS:time']).getTime()
+    if (!workType.includes('auraus') || Date.now() - time > 198000000) {
       removedDataPoints++
       continue
     }
@@ -31,7 +32,7 @@ const parseData = (data, verbose, noProj) => {
     strippedData.push({
       id: i,
       workType: element['GIS:AuratKartalla']['GIS:tyolajit'].split(', ').map(element => element.replace(/,/g, '')),
-      time: new Date(element['GIS:AuratKartalla']['GIS:time']).getTime(),
+      time: time,
       coordinates: coords[0] === coords[coords.length - 1] ? coordsAsNumbers.slice(0, coords.length - 1) : coordsAsNumbers,
       roadName: element['GIS:AuratKartalla']['GIS:Kadunnimi']
     })

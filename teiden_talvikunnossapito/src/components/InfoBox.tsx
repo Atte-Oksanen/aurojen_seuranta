@@ -2,7 +2,7 @@ import { useState } from "react"
 import AboutIcon from "./icons/AboutIcon"
 import XIcon from "./icons/XIcon"
 
-const InfoBox = ({ timestamp }: { timestamp: Date }) => {
+const InfoBox = ({ timestamp, plowDataLen }: { timestamp: Date, plowDataLen: number }) => {
   const [showBox, setShowBox] = useState<boolean>(false)
 
   const handleShowModal = () => {
@@ -43,6 +43,8 @@ const InfoBox = ({ timestamp }: { timestamp: Date }) => {
           Kartalla esitetään Espoon kaupungin tarjoamaa tietoa toteutuneista talvihoidon töistä viimeisen 60 tunnin ajalta.
           <br />
           Tiedot päivittyvät kello 5-23 noin kahden tunnin välein.
+          <br />
+          Reittejä aurattu viimeisen 60 tunnin aikana: {plowDataLen}
           <br />
           Käytetty rajapinta löytyy <a className='underline text-blue-600 hover:text-blue-800 visited:text-purple-600' href="https://kartat.espoo.fi/avoindata/" target="_blank" rel="noopener">täältä</a>.
           <br />

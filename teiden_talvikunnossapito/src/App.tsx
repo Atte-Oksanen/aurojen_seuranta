@@ -5,13 +5,13 @@ import InfoBox from './components/InfoBox'
 import LoadingScreen from './components/LoadingScreen'
 import roadNameService from './services/roadNames'
 import plowService from './services/plowActivity'
-import { GeoJsonObject } from 'geojson'
-import { roadObject } from './types/roadName'
+import { roadObject } from './types/localTypes'
 import { LatLngTuple } from 'leaflet'
+import { FeatureCollection } from 'geojson'
 
 function App() {
   const [roadNames, setRoadNames] = useState<roadObject[]>()
-  const [coords, setCoords] = useState<GeoJsonObject>()
+  const [coords, setCoords] = useState<FeatureCollection>()
   const [timestamp, setTimestamp] = useState<Date>()
   const [mapCenter, setMapCenter] = useState<LatLngTuple>([60.15976, 24.72423])
 
@@ -20,7 +20,9 @@ function App() {
       const plowData = await plowService.getPlowData()
       const roadnamesTemp = await roadNameService.getRoadNames()
       setTimeout(() => {
-        setCoords(plowData.geoJson)
+        if (plowData) {
+          setCoords(plowData.geoJson)
+        }
         setTimestamp(new Date(plowData.timestamp))
         setRoadNames(roadnamesTemp.map(element => { return { ...element, timeStamp: new Date(element.timeStamp) } }))
       }, 1500)
@@ -33,7 +35,7 @@ function App() {
       {!coords && !roadNames && <LoadingScreen />}
       {roadNames && <SearchComponent roadNames={roadNames} setMapCenter={setMapCenter} />}
       {<MapComponent mapCenter={mapCenter} coords={coords} timestamp={timestamp} />}
-      {timestamp && <InfoBox timestamp={timestamp} />}
+      {timestamp && coords && <InfoBox timestamp={timestamp} plowDataLen={coords.features.length} />}
     </div>
   )
 }

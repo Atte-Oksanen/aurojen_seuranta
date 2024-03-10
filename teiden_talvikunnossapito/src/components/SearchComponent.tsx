@@ -1,5 +1,5 @@
 import { LatLngTuple } from "leaflet"
-import { roadObject } from "../types/roadName"
+import { roadObject } from "../types/localTypes"
 import { useState } from "react"
 
 const SearchComponent = ({ roadNames, setMapCenter }: { roadNames: roadObject[], setMapCenter: (coords: LatLngTuple) => void }) => {

@@ -1,8 +1,8 @@
 import axios from "axios"
-import { GeoJsonObject } from "geojson"
+import { FeatureCollection } from "geojson"
 
 interface returnObject {
-  geoJson: GeoJsonObject,
+  geoJson: FeatureCollection,
   type: string,
   timestamp: number
 }
